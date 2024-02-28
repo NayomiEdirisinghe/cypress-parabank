@@ -31,6 +31,16 @@ Add the following to the `<tomcat install>/config/context.xml` make sure to plac
  <Context antiResourceLocking="true">
  ```
 
+
+# Setup Cypress & run tests
+1. Once the local setup is completed, install Node.js. In order to run the test runner and JavaScript/TypeScript execution environment,need to install Node.
+2. While in the project root directory, run `npm install` to install all the dependancies provide in the package.json
+3. Run `npx cypress open` to start cypress. Select E2E testing > Choose browser and start. Make sure to start the tomcat before running the specs
+
+```
+If the tomcat instance run in a different port, make sure to update the 'baseUrl' property in 'cypress.config.ts' file
+```
+
 ## Changing default ports
 HyperSQL listens on the default port number `9001`. This port number can conflict with other instances of HyperSQL and may conflict with certain other applications such as the "Intel(R) Graphics Command Center Service". To change the port number to something else like `9002` , modify the following files located under "src/main/resources" or in a deployed WAR under "WEB-INF/classes":
 
