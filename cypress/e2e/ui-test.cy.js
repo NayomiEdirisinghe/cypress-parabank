@@ -1,10 +1,6 @@
-// Navigate to Para bank application.
-// Create a new user from user registration page (Ensure username is generated randomly and it. is unique in every test execution).
-//
 // for auto completion using cypress library
 /// <reference types="cypress" /> 
 
-import { log } from 'console';
 import {generateRandomUsername} from '../support/generate-random-user.js';
 
 let sessionId
@@ -24,27 +20,23 @@ describe('Create a new user with random generated username', () => {
         cy.createSession()
     });
 
-    it.skip('Navigate to Para bank application',() => {
+    it('Navigate to Para bank application',() => {
         cy.url().should('include','/parabank/index.htm')
         cy.log('Successfully Navigated to Para bank application')
     })
 
-    it.skip('Create a new user from user registration page (Ensure username is generated randomly and it is unique in every test execution)', () => {
+    it('Create a new user from user registration page (Ensure username is generated randomly and it is unique in every test execution)', () => {
         cy.log(username)
         cy.intercept(
-            'POST',
-            `parabank/register.htm`, 
-            (req) => {
-                req.headers['Cookie'] = sessionId
-            }
-            ).as('createUser')
+        'POST',
+        `parabank/register.htm`, 
+        (req) => {
+            req.headers['Cookie'] = sessionId
+        }
+        ).as('createUser')
+
 
         cy.visit('/parabank/register.htm')
-        // cy.visit('/parabank/register.htm', {
-        //     headers: {
-        //     'Cookie': sessionId
-        //     }
-        // })
 
         // Fill the form
         cy.get("#customer\\.firstName").clear().type("John");
@@ -70,19 +62,17 @@ describe('Create a new user with random generated username', () => {
         cy.get('#leftPanel').within(() => {
             cy.get('p').should('contain', "John Smith");
         })
-
     })
 
-    it.skip('Login to the application with the user created in step 2',() =>{
-        // cy.log(username) uncomment after finished
+    it('Login to the application with the user created in step 2',() =>{
+        cy.log(username)
         cy.intercept(
             'GET',
             `/parabank/services_proxy/bank/customers/*/accounts`
         ).as('login')
         
 
-        // User733/ User757, test_1234 - change to username after finished
-        cy.get('input.input[name="username"]').type('User757'),
+        cy.get('input.input[name="username"]').type(username),
         cy.get('input.input[name="password"]').type(password),
         cy.get('input[type="submit"][value="Log In"]').click();
         cy.wait('@login')
@@ -110,7 +100,7 @@ describe('Create a new user with random generated username', () => {
         });
     })
 
-    it.skip('Verify if the Global navigation menu in home page is working as expected' , () => {
+    it('Verify if the Global navigation menu in home page is working as expected' , () => {
         cy.url().should('include','/parabank/index.htm')
 
         // About us
@@ -149,11 +139,10 @@ describe('Create a new user with random generated username', () => {
         // Contact button
         cy.get('#headerPanel .button .contact').click();
         cy.url().should('include', '/contact');
-
     })
 
-    it.skip('Create a Savings account from “Open New Account Page” and capture the account number' , () => {
-        // cy.log(username) uncomment after finished
+    it('Create a Savings account from “Open New Account Page” and capture the account number' , () => {
+        cy.log(username)
         cy.intercept(
             'GET',
             `/parabank/services_proxy/bank/customers/*/accounts`
@@ -167,8 +156,8 @@ describe('Create a new user with random generated username', () => {
             `/parabank/services_proxy/bank/createAccount?customerId=*&newAccountType=1&fromAccountId=*`
         ).as('createAccount')
 
-        // User733/ User757, test_1234 - change to username after finished
-        cy.get('input.input[name="username"]').type('User757'),
+
+        cy.get('input.input[name="username"]').type(username),
         cy.get('input.input[name="password"]').type(password),
         cy.get('input[type="submit"][value="Log In"]').click();
         cy.wait('@login')
@@ -185,7 +174,7 @@ describe('Create a new user with random generated username', () => {
             const responseBody = interception.response.body;
             const accountNumber = responseBody.id;
 
-            cy.log(accountNumber);
+            cy.log('Account Number:' , accountNumber);
 
             cy.get('#rightPanel').within(() => {
                 cy.get('p').should('contain', accountNumber)
@@ -193,8 +182,8 @@ describe('Create a new user with random generated username', () => {
         });
     })
 
-    it.skip('Validate if Accounts overview page is displaying the balance details as expected', () => {
-        // cy.log(username) uncomment after finished
+    it('Validate if Accounts overview page is displaying the balance details as expected', () => {
+        cy.log(username)
         cy.intercept(
             'GET',
             `/parabank/services_proxy/bank/customers/*/accounts`
@@ -208,9 +197,8 @@ describe('Create a new user with random generated username', () => {
             `/parabank/services_proxy/bank/customers/*/account`
         ).as('accounts')
         
-
-        // User733/ User757, test_1234 - change to username after finished
-        cy.get('input.input[name="username"]').type('User757'),
+        
+        cy.get('input.input[name="username"]').type(username),
         cy.get('input.input[name="password"]').type(password),
         cy.get('input[type="submit"][value="Log In"]').click();
         cy.wait('@login')
@@ -231,12 +219,10 @@ describe('Create a new user with random generated username', () => {
                 cy.get('td').eq(1).should('contain', totalAmount);
             });
         })
-
-
     })
 
-    it.skip('Transfer funds from account created in step 5 to another account.',() => {
-        // cy.log(username) uncomment after finished
+    it('Transfer funds from account created in step 5 to another account.',() => {
+        cy.log(username)
         cy.intercept(
             'GET',
             `/parabank/services_proxy/bank/customers/*/accounts`
@@ -255,8 +241,7 @@ describe('Create a new user with random generated username', () => {
         ).as('accounts')
 
 
-        // User733/ User757, test_1234 - change to username after finished
-        cy.get('input.input[name="username"]').type('User757'),
+        cy.get('input.input[name="username"]').type(username),
         cy.get('input.input[name="password"]').type(password),
         cy.get('input[type="submit"][value="Log In"]').click();
         cy.wait('@login')
@@ -271,22 +256,21 @@ describe('Create a new user with random generated username', () => {
             cy.log('savings account Id : ' , savingsAccountId);
             cy.log('checking account Id : ' , checkingAccountId);
         
-            cy.get('#amount').type('0')
+            cy.get('#amount').type('50')
             cy.get('#toAccountId').select(savingsAccountId.toString());
             cy.get('input.button[value="Transfer"]').click();
 
             cy.get('#rightPanel').within(() => {
                 cy.get('h1').should('contain', 'Transfer Complete!')
-                cy.get('#amount').should('contain', '0');
+                cy.get('#amount').should('contain', '50');
                 cy.get('#fromAccountId').should('contain', checkingAccountId)
                 cy.get('#toAccountId').should('contain', savingsAccountId)
             })
-        });
-        
+        });        
     })
 
     it('Pay the bill with account created in step 5' , () => {
-        // cy.log(username) uncomment after finished
+        cy.log(username)
         cy.intercept(
             'GET',
             `/parabank/services_proxy/bank/customers/*/accounts`
@@ -305,8 +289,7 @@ describe('Create a new user with random generated username', () => {
         ).as('accounts')
 
 
-        // User733/ User757, test_1234 - change to username after finished
-        cy.get('input.input[name="username"]').type('User757'),
+        cy.get('input.input[name="username"]').type(username),
         cy.get('input.input[name="password"]').type(password),
         cy.get('input[type="submit"][value="Log In"]').click();
         cy.wait('@accounts').then((interception) => {
@@ -343,5 +326,59 @@ describe('Create a new user with random generated username', () => {
         })
     })
 
+    it('API - Search the transactions using “Find transactions” API call by amount for the payment transactions made in Step 8 & Validate the details displayed in Json response' , () => {
+        cy.log(username)
+        cy.intercept(
+        'GET',
+        `/parabank/services_proxy/bank/customers/*/accounts`
+        ).as('login')
+        cy.intercept(
+        'GET',
+        `/parabank/overview.htm`
+        ).as('overview')
+        cy.intercept(
+        'GET',
+        `/parabank/findtrans.htm`
+        ).as('findTransaction')
+        cy.intercept(
+        'GET',
+        `/parabank/services_proxy/bank/customers/*/accounts`
+        ).as('accounts')
+        cy.intercept(
+            'GET',
+            `/parabank/services_proxy/bank/accounts/*/transactions/amount/*`
+        ).as('transactionAmount')
+
+
+        cy.get('input.input[name="username"]').type(username),
+        cy.get('input.input[name="password"]').type(password),
+        cy.get('input[type="submit"][value="Log In"]').click();
+        cy.wait('@accounts').then((interception) => {
+            const responseBody = interception.response.body;
+            const savingsAccount = responseBody.find(account => account.type === 'SAVINGS');
+            const savingsAccountId = savingsAccount.id
+            cy.log('savings account Id : ' , savingsAccountId)
+    
+    
+            cy.get('#leftPanel').contains('Find Transactions').click();
+            cy.wait('@findTransaction')
+    
+            cy.get('form').within(() => {
+                cy.get('#accountId').select(savingsAccountId.toString());
+                cy.get('[id="criteria.amount"]').type('15');
+                cy.get('button[type="submit"]').eq(3).click();
+            })
+            cy.wait('@transactionAmount').then((interception) => {
+                const responseBody = interception.response.body;
+                const expectedAmount = 15;
+                const actualAmount = responseBody.amount;
+            
+                responseBody.forEach((transaction) => {
+                    const actualAmount = transaction.amount;
+                    expect(actualAmount).to.equal(expectedAmount);
+                });
+            });
+        })    
+    })
 })
 
