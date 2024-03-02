@@ -9,16 +9,11 @@ const { defineConfig } = require("cypress");
 //     watchForFileChanges:true,
 //   },
 // });
-
-
-export default defineConfig({
-  e2e: {
-    baseUrl: 'http://localhost:8080',
-    watchForFileChanges: false,
-    parseSpecialCharSequences: false,
-  },
-  generatedCredentials: {
-    username: '',
-    password: 'test_1234'
-  }
+exports.default = defineConfig({
+    e2e: {
+        baseUrl: 'http://localhost:8080',
+        watchForFileChanges: false,
+        parseSpecialCharSequences: false,
+        supportFile: "cypress/support/commands.js"
+    }
 });

@@ -1,17 +1,14 @@
-// Navigate to Para bank application. - Done
+// Navigate to Para bank application.
 // Create a new user from user registration page (Ensure username is generated randomly and it is unique in every test execution).
 //
 // for auto completion using cypress library
 /// <reference types="cypress" /> 
 
-// import {generateRandomNumber} from '../cypress/support/functions.ts';
+import {generateRandomUsername} from '../support/generate-random-user.js';
 
 let sessionId
-// let username
 
 describe('Create a new user from the registration page', () => {
-
-  // visit parabank home page before each test & preserve the sessionId
   beforeEach(() =>{
     cy.visit('/parabank').then(() => {
       cy.getCookie('sessionId').then(cookie => {
@@ -21,8 +18,8 @@ describe('Create a new user from the registration page', () => {
   });
 
   it('Go to the registration page', () => {
-    // generate a random username
-    const username = 'User' + generateRandomNumber()
+    const username = generateRandomUsername()
+    cy.log(username)
 
     // Load the fixture data
     cy.readFile('cypress/fixtures/createUserResponse.html').then((html) => {
@@ -78,10 +75,4 @@ describe('Create a new user from the registration page', () => {
     })
   })
 })
-
-
-function generateRandomNumber(): number {
-  const number = Math.floor(100 + Math.random() * 900);
-  return number;
-}
 
