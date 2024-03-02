@@ -38,7 +38,7 @@ Add the following to the `<tomcat install>/config/context.xml` make sure to plac
 3. Run `npx cypress open` to start cypress. Select E2E testing > Choose browser and start. Make sure to start the tomcat before running the specs
 
 ```
-If the tomcat instance run in a different port, make sure to update the 'baseUrl' property in 'cypress.config.ts' file
+If the tomcat instance run in a different port, make sure to update the 'baseUrl' property in 'cypress.config.js' file
 ```
 
 ## Changing default ports
