@@ -35,3 +35,12 @@ jtest-ft-cov/
 
 # IntelliJ
 out/
+
+#Dependancies
+node_modules
+
+#System Files
+.DS_Store
+
+#WEB-INF/db
+src/test/resources/WEB-INF/db
