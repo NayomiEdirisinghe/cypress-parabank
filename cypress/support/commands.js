@@ -24,4 +24,19 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
+let sessionId 
 
+Cypress.Commands.add('createSession', () => {
+    if (sessionId) {
+        // If sessionId is already set, no need to visit the page again
+        return cy.wrap(sessionId);
+    }
+
+    cy.visit('/parabank/index.htm').then(() => {
+        cy.getCookie('sessionId').then(cookie => {
+            sessionId = cookie ? cookie.value : null;
+            // Return sessionId so it can be used in subsequent commands
+            return sessionId;
+        });
+    });
+});
