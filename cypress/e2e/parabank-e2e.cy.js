@@ -14,7 +14,7 @@ const availableAmountMainAcc = balanceMainAcc ;
 const availableAmmountSavingsAcc = balanceSavingsAcc ; 
 const totalAmount = availableAmountMainAcc + availableAmmountSavingsAcc
 
-describe('Create a new user with random generated username', () => {
+describe('e2e test for basic transactions of parabank application', () => {
 
     beforeEach(() =>{
         cy.createSession()
