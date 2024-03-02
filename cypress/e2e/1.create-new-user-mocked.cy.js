@@ -8,7 +8,7 @@ import {generateRandomUsername} from '../support/generate-random-user.js';
 
 let sessionId
 
-describe('Create a new user from the registration page', () => {
+describe('Create a new user with random generated username', () => {
   beforeEach(() =>{
     cy.visit('/parabank').then(() => {
       cy.getCookie('sessionId').then(cookie => {
@@ -17,7 +17,7 @@ describe('Create a new user from the registration page', () => {
     })
   });
 
-  it('Go to the registration page', () => {
+  it('Verify creating a new user via registration page', () => {
     const username = generateRandomUsername()
     cy.log(username)
 
