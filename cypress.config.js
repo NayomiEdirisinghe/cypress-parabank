@@ -6,9 +6,9 @@ exports.default = defineConfig({
         watchForFileChanges: false,
         parseSpecialCharSequences: false,
         supportFile: "cypress/support/commands.js",
-        retries: {
-            "runMode": 2,
-            "openMode": 2
-        }
+        // retries: {
+        //     "runMode": 2,
+        //     "openMode": 2
+        // }
     }
 });
