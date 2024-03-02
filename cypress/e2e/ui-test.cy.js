@@ -4,6 +4,7 @@
 // for auto completion using cypress library
 /// <reference types="cypress" /> 
 
+import { log } from 'console';
 import {generateRandomUsername} from '../support/generate-random-user.js';
 
 let sessionId
@@ -46,10 +47,10 @@ describe('Create a new user with random generated username', () => {
         // })
 
         // Fill the form
-        cy.get("#customer\\.firstName").clear().type("First Name");
-        cy.get("#customer\\.lastName").clear().type("Last Name");
+        cy.get("#customer\\.firstName").clear().type("John");
+        cy.get("#customer\\.lastName").clear().type("Smith");
         cy.get("#customer\\.address\\.street").clear().type("123 Test Street");
-        cy.get("#customer\\.address\\.city").clear().type("Test City");
+        cy.get("#customer\\.address\\.city").clear().type("City");
         cy.get("#customer\\.address\\.state").clear().type("VIC");
         cy.get("#customer\\.address\\.zipCode").clear().type("1234");
         cy.get("#customer\\.phoneNumber").clear().type("0491234567");
@@ -67,7 +68,7 @@ describe('Create a new user with random generated username', () => {
             cy.get('p').should('have.text', 'Your account was created successfully. You are now logged in.')
         });
         cy.get('#leftPanel').within(() => {
-            cy.get('p').should('contain', "First Name Last Name");
+            cy.get('p').should('contain', "John Smith");
         })
 
     })
@@ -242,6 +243,10 @@ describe('Create a new user with random generated username', () => {
         ).as('login')
         cy.intercept(
             'GET',
+            `/parabank/overview.htm`
+        ).as('overview')
+        cy.intercept(
+            'GET',
             `/parabank/transfer.htm`
         ).as('transfer')
         cy.intercept(
@@ -263,21 +268,79 @@ describe('Create a new user with random generated username', () => {
             const checkingAccount = responseBody.find(account => account.type === 'CHECKING');
             const savingsAccountId = savingsAccount.id;
             const checkingAccountId = checkingAccount.id
-            cy.log(savingsAccountId);
-            cy.log(checkingAccountId);
+            cy.log('savings account Id : ' , savingsAccountId);
+            cy.log('checking account Id : ' , checkingAccountId);
         
-            cy.get('#amount').type('50')
+            cy.get('#amount').type('0')
             cy.get('#toAccountId').select(savingsAccountId.toString());
             cy.get('input.button[value="Transfer"]').click();
 
             cy.get('#rightPanel').within(() => {
                 cy.get('h1').should('contain', 'Transfer Complete!')
-                cy.get('#amount').should('contain', '50');
+                cy.get('#amount').should('contain', '0');
                 cy.get('#fromAccountId').should('contain', checkingAccountId)
                 cy.get('#toAccountId').should('contain', savingsAccountId)
             })
         });
         
+    })
+
+    it('Pay the bill with account created in step 5' , () => {
+        // cy.log(username) uncomment after finished
+        cy.intercept(
+            'GET',
+            `/parabank/services_proxy/bank/customers/*/accounts`
+        ).as('login')
+        cy.intercept(
+            'GET',
+            `/parabank/overview.htm`
+        ).as('overview')
+        cy.intercept(
+            'GET',
+            `/parabank/billpay.htm`
+        ).as('billpay')
+        cy.intercept(
+            'GET',
+            `/parabank/services_proxy/bank/customers/*/accounts`
+        ).as('accounts')
+
+
+        // User733/ User757, test_1234 - change to username after finished
+        cy.get('input.input[name="username"]').type('User757'),
+        cy.get('input.input[name="password"]').type(password),
+        cy.get('input[type="submit"][value="Log In"]').click();
+        cy.wait('@accounts').then((interception) => {
+            const responseBody = interception.response.body;
+            const savingsAccount = responseBody.find(account => account.type === 'SAVINGS');
+            const savingsAccountId = savingsAccount.id
+            cy.log('savings account Id : ' , savingsAccountId)
+        
+
+            cy.get('#leftPanel').contains('Bill Pay').click();
+            cy.wait('@billpay')
+
+            cy.get('form').within(() => {
+                cy.get('input[name="payee.name"]').type('John Smith');
+                cy.get('input[name="payee.address.street"]').type('123 Test Street');
+                cy.get('input[name="payee.address.city"]').type('City');
+                cy.get('input[name="payee.address.state"]').type('VIC');
+                cy.get('input[name="payee.address.zipCode"]').type('1234');
+                cy.get('input[name="payee.phoneNumber"]').type('0491234567');
+                cy.get('input[name="payee.accountNumber"]').type('99999');
+                cy.get('input[name="verifyAccount"]').type('99999');
+                cy.get('input[name="amount"]').type('15');
+                cy.get('select[name="fromAccountId"]').select(savingsAccountId.toString());
+
+                cy.get('input[type="submit"][value="Send Payment"]').click();
+            })
+
+            cy.get('#rightPanel').within(() => {
+                cy.get('h1').should('contain', 'Bill Payment Complete')
+                cy.get('#payeeName').should('contain', 'John Smith');
+                cy.get('#amount').should('contain', 15)
+                cy.get('#fromAccountId').should('contain', savingsAccountId)
+            })
+        })
     })
 
 })
