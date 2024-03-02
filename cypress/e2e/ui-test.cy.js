@@ -1,5 +1,5 @@
 // Navigate to Para bank application.
-// Create a new user from user registration page (Ensure username is generated randomly and it is unique in every test execution).
+// Create a new user from user registration page (Ensure username is generated randomly and it. is unique in every test execution).
 //
 // for auto completion using cypress library
 /// <reference types="cypress" /> 
@@ -234,6 +234,51 @@ describe('Create a new user with random generated username', () => {
 
     })
 
+    it.skip('Transfer funds from account created in step 5 to another account.',() => {
+        // cy.log(username) uncomment after finished
+        cy.intercept(
+            'GET',
+            `/parabank/services_proxy/bank/customers/*/accounts`
+        ).as('login')
+        cy.intercept(
+            'GET',
+            `/parabank/transfer.htm`
+        ).as('transfer')
+        cy.intercept(
+            'GET',
+            `/parabank/services_proxy/bank/customers/*/accounts`
+        ).as('accounts')
+
+
+        // User733/ User757, test_1234 - change to username after finished
+        cy.get('input.input[name="username"]').type('User757'),
+        cy.get('input.input[name="password"]').type(password),
+        cy.get('input[type="submit"][value="Log In"]').click();
+        cy.wait('@login')
+
+        cy.get('#leftPanel').contains('Transfer Funds').click();
+        cy.wait('@accounts').then((interception) => {
+            const responseBody = interception.response.body;
+            const savingsAccount = responseBody.find(account => account.type === 'SAVINGS');
+            const checkingAccount = responseBody.find(account => account.type === 'CHECKING');
+            const savingsAccountId = savingsAccount.id;
+            const checkingAccountId = checkingAccount.id
+            cy.log(savingsAccountId);
+            cy.log(checkingAccountId);
+        
+            cy.get('#amount').type('50')
+            cy.get('#toAccountId').select(savingsAccountId.toString());
+            cy.get('input.button[value="Transfer"]').click();
+
+            cy.get('#rightPanel').within(() => {
+                cy.get('h1').should('contain', 'Transfer Complete!')
+                cy.get('#amount').should('contain', '50');
+                cy.get('#fromAccountId').should('contain', checkingAccountId)
+                cy.get('#toAccountId').should('contain', savingsAccountId)
+            })
+        });
+        
+    })
 
 })
 
