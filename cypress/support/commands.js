@@ -24,9 +24,9 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
-let sessionId 
+// let sessionId 
 
-Cypress.Commands.add('createSession', () => {
+Cypress.Commands.add('createSession', (sessionId) => {
     if (sessionId) {
         // If sessionId is already set, no need to visit the page again
         return cy.wrap(sessionId);
@@ -40,3 +40,15 @@ Cypress.Commands.add('createSession', () => {
         });
     });
 });
+
+Cypress.Commands.add('login' , (username, password) => {
+    cy.intercept(
+        'GET',
+        `/parabank/services_proxy/bank/customers/*/accounts`
+    ).as('login')
+
+    cy.get('input.input[name="username"]').type(username),
+    cy.get('input.input[name="password"]').type(password),
+    cy.get('input[type="submit"][value="Log In"]').click();
+    cy.wait('@login')
+})
