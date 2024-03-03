@@ -98,12 +98,14 @@ describe('e2e test for basic transactions of parabank application', () => {
         cy.url().should('include', '/parabank/services.htm');
 
         // Products
+        // timeout error - expected '' to include 'parasoft.com/products/'
         // cy.get('#headerPanel .leftmenu').contains('Products').click();
         // cy.wait(5);
         // cy.url().should('include', 'parasoft.com/products/');
         // cy.go('back');
 
         // Locations
+        // timeout error - expected '' to include 'parasoft.com/products/'
         // cy.get('#headerPanel .leftmenu').contains('Locations').click();
         // cy.url().should('include', '/parasoft.com/solutions/');
         // cy.go('back');
