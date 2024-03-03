@@ -3,16 +3,8 @@
 
 import {generateRandomUsername} from '../support/generate-random-user.js';
 
-let sessionId
 const username = generateRandomUsername()
 const password = 'test_1234'
-
-const balanceSavingsAcc = 100;
-const balanceMainAcc = 515 - balanceSavingsAcc ;
-
-const availableAmountMainAcc = balanceMainAcc ;
-const availableAmmountSavingsAcc = balanceSavingsAcc ; 
-const totalAmount = availableAmountMainAcc + availableAmmountSavingsAcc
 
 describe('e2e test for basic transactions of parabank application', () => {
 
@@ -27,12 +19,10 @@ describe('e2e test for basic transactions of parabank application', () => {
 
     it('Create a new user from user registration page (Ensure username is generated randomly and it is unique in every test execution)', () => {
         cy.log(username)
+        // intercepts
         cy.intercept(
-        'POST',
-        `parabank/register.htm`, 
-        (req) => {
-            req.headers['Cookie'] = sessionId
-        }
+            'POST',
+            `parabank/register.htm`, 
         ).as('createUser')
 
 
@@ -66,17 +56,11 @@ describe('e2e test for basic transactions of parabank application', () => {
 
     it('Login to the application with the user created in step 2',() =>{
         cy.log(username)
-        cy.intercept(
-            'GET',
-            `/parabank/services_proxy/bank/customers/*/accounts`
-        ).as('login')
+ 
         
+        cy.login(username, password);
 
-        cy.get('input.input[name="username"]').type(username),
-        cy.get('input.input[name="password"]').type(password),
-        cy.get('input[type="submit"][value="Log In"]').click();
-        cy.wait('@login')
-
+        // Verify details
         cy.get('h1').should('contain','Accounts Overview')
         cy.get('#accountTable thead').within(() => {
             cy.get('th').should('have.length', 3);
@@ -84,7 +68,7 @@ describe('e2e test for basic transactions of parabank application', () => {
             cy.contains('th', 'Balance*');
             cy.contains('th', 'Available Amount');
         });
-
+        // Verify Checkin Account Details
         cy.get('tbody').within(() => {
             cy.get('tr').eq(0).within(() => {
                 cy.get('td').eq(1).should('contain', '$515.50');
@@ -143,10 +127,7 @@ describe('e2e test for basic transactions of parabank application', () => {
 
     it('Create a Savings account from “Open New Account Page” and capture the account number' , () => {
         cy.log(username)
-        cy.intercept(
-            'GET',
-            `/parabank/services_proxy/bank/customers/*/accounts`
-        ).as('login')
+        // intercepts
         cy.intercept(
             'GET',
             `/parabank/openaccount.htm`
@@ -157,11 +138,9 @@ describe('e2e test for basic transactions of parabank application', () => {
         ).as('createAccount')
 
 
-        cy.get('input.input[name="username"]').type(username),
-        cy.get('input.input[name="password"]').type(password),
-        cy.get('input[type="submit"][value="Log In"]').click();
-        cy.wait('@login')
+        cy.login(username,password);
 
+        // create savings account
         cy.get('#leftPanel').contains('Open New Account').click();
         cy.wait('@openNewAccount');
         cy.url().should('contain', 'parabank/openaccount.htm');
@@ -183,50 +162,55 @@ describe('e2e test for basic transactions of parabank application', () => {
     })
 
     it('Validate if Accounts overview page is displaying the balance details as expected', () => {
+        const initialBalanceCheckingAcc = 515.5;
+        const initialBalanceSavingsAcc = 100;
+        const currentBalanceMainAcc = initialBalanceCheckingAcc - initialBalanceSavingsAcc ;
+
         cy.log(username)
-        cy.intercept(
-            'GET',
-            `/parabank/services_proxy/bank/customers/*/accounts`
-        ).as('login')
+        // intercepts
         cy.intercept(
             'GET',
             `/parabank/overview.htm`
         ).as('overview')
         cy.intercept(
             'GET',
-            `/parabank/services_proxy/bank/customers/*/account`
+            `/parabank/services_proxy/bank/customers/*/accounts`
         ).as('accounts')
         
-        
-        cy.get('input.input[name="username"]').type(username),
-        cy.get('input.input[name="password"]').type(password),
-        cy.get('input[type="submit"][value="Log In"]').click();
-        cy.wait('@login')
+        cy.login(username,password);
 
+        // verify account overview after creating savings account
         cy.get('#leftPanel').contains('Accounts Overview').click();        
-        cy.wait('@overview');
+        cy.wait('@accounts').then((interception) => {
+            const responseBody = interception.response.body;
+            const checkingAcc = responseBody.find(account => account.type === 'CHECKING');
+            const balanceCheckingAcc = checkingAcc.balance
+            const savingsAcc = responseBody.find(account => account.type === 'SAVINGS');
+            const balanceSavingsAcc = savingsAcc.balance
 
-        cy.get('tbody').within(() => {
-            cy.get('tr').eq(0).within(() => {
-                cy.get('td').eq(1).should('contain', balanceMainAcc);
-                cy.get('td').eq(2).should('contain', availableAmountMainAcc);
-            });
-            cy.get('tr').eq(1).within(() => {
-                cy.get('td').eq(1).should('contain', balanceSavingsAcc);
-                cy.get('td').eq(2).should('contain', availableAmmountSavingsAcc);
-            });
-            cy.get('tr').eq(2).within(() => {
-                cy.get('td').eq(1).should('contain', totalAmount);
-            });
+            cy.log('Checking Account Balance : ', balanceCheckingAcc);
+            cy.log('Savings Account Balance : ', balanceSavingsAcc)
+            expect(balanceCheckingAcc).to.be.eql(currentBalanceMainAcc)
+
+            cy.get('tbody').within(() => {
+                cy.get('tr').eq(0).within(() => {
+                    cy.get('td').eq(1).should('contain', balanceCheckingAcc);
+                    cy.get('td').eq(2).should('contain', balanceCheckingAcc);
+                });
+                cy.get('tr').eq(1).within(() => {
+                    cy.get('td').eq(1).should('contain', balanceSavingsAcc);
+                    cy.get('td').eq(2).should('contain', balanceSavingsAcc);
+                });
+                cy.get('tr').eq(2).within(() => {
+                    cy.get('td').eq(1).should('contain', balanceCheckingAcc + balanceSavingsAcc);
+                });
+            })
         })
     })
 
     it('Transfer funds from account created in step 5 to another account.',() => {
         cy.log(username)
-        cy.intercept(
-            'GET',
-            `/parabank/services_proxy/bank/customers/*/accounts`
-        ).as('login')
+        // intercepts
         cy.intercept(
             'GET',
             `/parabank/overview.htm`
@@ -240,12 +224,9 @@ describe('e2e test for basic transactions of parabank application', () => {
             `/parabank/services_proxy/bank/customers/*/accounts`
         ).as('accounts')
 
+        cy.login(username,password);
 
-        cy.get('input.input[name="username"]').type(username),
-        cy.get('input.input[name="password"]').type(password),
-        cy.get('input[type="submit"][value="Log In"]').click();
-        cy.wait('@login')
-
+        // transfer funds from checking account to savings account
         cy.get('#leftPanel').contains('Transfer Funds').click();
         cy.wait('@accounts').then((interception) => {
             const responseBody = interception.response.body;
@@ -271,10 +252,7 @@ describe('e2e test for basic transactions of parabank application', () => {
 
     it('Pay the bill with account created in step 5' , () => {
         cy.log(username)
-        cy.intercept(
-            'GET',
-            `/parabank/services_proxy/bank/customers/*/accounts`
-        ).as('login')
+        // intercepts
         cy.intercept(
             'GET',
             `/parabank/overview.htm`
@@ -288,10 +266,9 @@ describe('e2e test for basic transactions of parabank application', () => {
             `/parabank/services_proxy/bank/customers/*/accounts`
         ).as('accounts')
 
+        cy.login(username,password);
 
-        cy.get('input.input[name="username"]').type(username),
-        cy.get('input.input[name="password"]').type(password),
-        cy.get('input[type="submit"][value="Log In"]').click();
+        // Pay a bill using savings account
         cy.wait('@accounts').then((interception) => {
             const responseBody = interception.response.body;
             const savingsAccount = responseBody.find(account => account.type === 'SAVINGS');
@@ -328,10 +305,7 @@ describe('e2e test for basic transactions of parabank application', () => {
 
     it('API - Search the transactions using “Find transactions” API call by amount for the payment transactions made in Step 8 & Validate the details displayed in Json response' , () => {
         cy.log(username)
-        cy.intercept(
-        'GET',
-        `/parabank/services_proxy/bank/customers/*/accounts`
-        ).as('login')
+        // intercepts
         cy.intercept(
         'GET',
         `/parabank/overview.htm`
@@ -349,10 +323,9 @@ describe('e2e test for basic transactions of parabank application', () => {
             `/parabank/services_proxy/bank/accounts/*/transactions/amount/*`
         ).as('transactionAmount')
 
+        cy.login(username,password);
 
-        cy.get('input.input[name="username"]').type(username),
-        cy.get('input.input[name="password"]').type(password),
-        cy.get('input[type="submit"][value="Log In"]').click();
+        // find transaction by savings account and transfer amount
         cy.wait('@accounts').then((interception) => {
             const responseBody = interception.response.body;
             const savingsAccount = responseBody.find(account => account.type === 'SAVINGS');
@@ -371,7 +344,6 @@ describe('e2e test for basic transactions of parabank application', () => {
             cy.wait('@transactionAmount').then((interception) => {
                 const responseBody = interception.response.body;
                 const expectedAmount = 15;
-                const actualAmount = responseBody.amount;
             
                 responseBody.forEach((transaction) => {
                     const actualAmount = transaction.amount;
